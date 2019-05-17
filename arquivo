@@ -1,0 +1,64 @@
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@CrossOrigin(value="*")
+public class Controller {
+
+	@RequestMapping("/")
+	public String index() {
+		return "index page";
+	}
+	
+	@RequestMapping("/showtext")
+	public String showtext() {
+		return "Teste";
+	}
+}
+
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+	/**
+	 * Criação do método que permite o acesso ao index "/",
+	 * enquanto a pagina de login e algumas outras, é necessario que esteja
+	 * autenticado. E quando deslogar ele instancia uma nova classe de matchers.
+	 */
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable().authorizeRequests()
+		.antMatchers(HttpMethod.GET, "/").permitAll()
+		.anyRequest().authenticated()
+		.and().formLogin().permitAll()
+		.and().logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout"));
+	}
+	
+	/**
+	 * Dados para fazer a autenticação em memória.
+	 */
+	
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.inMemoryAuthentication()
+		.withUser("joao").password("{noop}1234").roles("USER");
+	}
+	
+	/*public UserDetailsService userDetailsService() {
+		User.UserBuilder users = User.withDefaultPasswordEncoder();
+		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+		manager.createUser(users.username("joao").password("password").roles("USER").build());
+		return manager;
+	}*/
+	
+	/**
+	 * Serve para o spring não bloquear as paginas estaticas. Exemplo: css
+	 */
+	
+	@Override
+	public void configure(WebSecurity web) throws Exception {
+		web.ignoring().antMatchers("/style/**");
+	}
+	
+}
